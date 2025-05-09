@@ -1,0 +1,24 @@
+import asyncio
+import logging
+import aiosqlite
+import pytz
+from datetime import datetime
+from aiogram import Bot, Dispatcher, types, F
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.filters import Command
+from aiogram.enums import ParseMode
+from aiogram.client.default import DefaultBotProperties
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+TOKEN = ("7526423092:AAEhJzRO1jDZ6McW7_2H_UtbMJ8kma4O3YA")
+if not TOKEN:
+    raise ValueError("BOT_TOKEN не найден! Проверьте переменные окружения.")
+
+# Инициализация бота и диспетчера
+bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+dp = Dispatcher()
+scheduler = AsyncIOScheduler()
+dp.data = {}  # Для хранения состояния пользователей
