@@ -33,3 +33,47 @@ keyboard = ReplyKeyboardMarkup(
     ],
     resize_keyboard=True
 )
+
+# Инициализация базы данных
+async def init_db():
+    try:
+        async with aiosqlite.connect("flashcards.db") as db:
+            # Создание таблицы flashcards
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS flashcards (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    question TEXT,
+                    answer TEXT,
+                    category TEXT
+                )
+            """)
+            # Проверка наличия столбца category
+            cursor = await db.execute("PRAGMA table_info(flashcards)")
+            columns = [info[1] for info in await cursor.fetchall()]
+            if 'category' not in columns:
+                logging.info("Столбец 'category' отсутствует, добавляем его")
+                await db.execute("ALTER TABLE flashcards ADD COLUMN category TEXT")
+                await db.commit()
+                logging.info("Столбец 'category' успешно добавлен")
+
+ # Создание таблицы statistics
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS statistics (
+                    user_id INTEGER PRIMARY KEY,
+                    correct INTEGER DEFAULT 0,
+                    incorrect INTEGER DEFAULT 0
+                )
+            """)
+            # Создание таблицы reminders
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS reminders (
+                    user_id INTEGER PRIMARY KEY,
+                    enabled INTEGER DEFAULT 0
+                )
+            """)
+            await db.commit()
+        logging.info("База данных инициализирована успешно")
+    except aiosqlite.Error as e:
+        logging.error(f"Ошибка инициализации базы данных: {e}")
+        raise
