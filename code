@@ -22,3 +22,14 @@ bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 scheduler = AsyncIOScheduler()
 dp.data = {}  # Для хранения состояния пользователей
+
+# Клавиатура
+keyboard = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="💅🏻Добавить карточку💅🏻"), KeyboardButton(text="👀Показать карточки👀")],
+        [KeyboardButton(text="🗑Очистить карточку🗑"), KeyboardButton(text="🔍Просмотр одной карточки🔍")],
+        [KeyboardButton(text="🔧Редактировать карточку🔧"), KeyboardButton(text="🎓Учить карточки🎓")],
+        [KeyboardButton(text="📈Статистика📈"), KeyboardButton(text="🔔 Напоминание"), KeyboardButton(text="❌ Отключить напоминание")]
+    ],
+    resize_keyboard=True
+)
