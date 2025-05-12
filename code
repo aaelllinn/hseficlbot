@@ -155,3 +155,35 @@ async def delete_card_prompt(message: Message):
 
    dp.data[message.from_user.id] = {"state": "delete_card"}
     await message.answer(f"Ваши карточки:\n{response}\nВведите номер карточки для удаления:")
+
+# Просмотр одной карточки
+@dp.message(F.text == "🔍Просмотр одной карточки🔍")
+async def view_card_prompt(message: Message):
+    logging.info(f"Кнопка 'Просмотр одной карточки' нажата пользователем {message.from_user.id}")
+    try:
+        async with aiosqlite.connect("flashcards.db") as db:
+            cursor = await db.execute(
+                "SELECT category, question, answer FROM flashcards WHERE user_id = ? ORDER BY category",
+                (message.from_user.id,))
+            cards = await cursor.fetchall()
+    except aiosqlite.Error as e:
+        logging.error(f"Ошибка базы данных: {e}")
+        await message.answer("❌ Ошибка при получении карточек. Попробуйте позже.")
+        return
+
+    if not cards:
+        await message.answer("У вас нет карточек.")
+        return
+
+    response = ""
+    current_category = None
+    card_number = 1
+    for category, question, answer in cards:
+        if category != current_category:
+            response += f"\n<b>📚 Тема: {category}</b>\n"
+            current_category = category
+        response += f"{card_number}. {question} - {answer}\n"
+        card_number += 1
+
+    dp.data[message.from_user.id] = {"state": "view_card"}
+    await message.answer(f"Ваши карточки:\n{response}\nВведите номер карточки для просмотра:")
