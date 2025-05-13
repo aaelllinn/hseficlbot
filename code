@@ -220,3 +220,34 @@ async def edit_card_prompt(message: Message):
     dp.data[message.from_user.id] = {"state": "edit_card"}
     await message.answer(
         f"Ваши карточки:\n{response}\nВведите номер, новый вопрос и ответ в формате: Номер - Вопрос - Ответ")
+# Учить карточки
+@dp.message(F.text == "🎓Учить карточки🎓")
+async def learn_cards_prompt(message: Message):
+    logging.info(f"Кнопка 'Учить карточки' нажата пользователем {message.from_user.id}")
+    user_id = message.from_user.id
+    try:
+        async with aiosqlite.connect("flashcards.db") as db:
+            cursor = await db.execute(
+                "SELECT DISTINCT category FROM flashcards WHERE user_id = ? AND category IS NOT NULL",
+                (user_id,))
+            categories = [row[0] for row in await cursor.fetchall()]
+    except aiosqlite.Error as e:
+        logging.error(f"Ошибка базы данных: {e}")
+        await message.answer("❌ Ошибка при получении категорий. Попробуйте позже.")
+        return
+
+    if not categories:
+        await message.answer("У вас нет карточек для изучения. Добавьте карточки с помощью 'Добавить карточку'. 😊")
+        return
+
+    category_keyboard = ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=cat)] for cat in categories] + [[KeyboardButton(text="🔙 Отмена")]],
+        resize_keyboard=True,
+        one_time_keyboard=True
+    )
+    dp.data[user_id] = {"state": "learn_select_category"}
+    await message.answer(
+        "Выберите тему для изучения карточек:\n\n" +
+        "\n".join(f"• {cat}" for cat in categories),
+        reply_markup=category_keyboard
+    )
