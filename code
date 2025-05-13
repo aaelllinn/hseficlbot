@@ -220,6 +220,7 @@ async def edit_card_prompt(message: Message):
     dp.data[message.from_user.id] = {"state": "edit_card"}
     await message.answer(
         f"Ваши карточки:\n{response}\nВведите номер, новый вопрос и ответ в формате: Номер - Вопрос - Ответ")
+
 # Учить карточки
 @dp.message(F.text == "🎓Учить карточки🎓")
 async def learn_cards_prompt(message: Message):
