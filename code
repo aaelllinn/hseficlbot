@@ -252,3 +252,30 @@ async def learn_cards_prompt(message: Message):
         "\n".join(f"• {cat}" for cat in categories),
         reply_markup=category_keyboard
     )
+
+# Статистика
+@dp.message(F.text == "📈Статистика📈")
+async def show_statistics(message: Message):
+    logging.info(f"Кнопка 'Статистика' нажата пользователем {message.from_user.id}")
+    user_id = message.from_user.id
+    try:
+        async with aiosqlite.connect("flashcards.db") as db:
+            cursor = await db.execute("SELECT correct, incorrect FROM statistics WHERE user_id = ?", (user_id,))
+            row = await cursor.fetchone()
+    except aiosqlite.Error as e:
+        logging.error(f"Ошибка базы данных: {e}")
+        await message.answer("❌ Ошибка при получении статистики. Попробуйте позже.")
+        return
+
+    if row:
+        correct, incorrect = row
+        total = correct + incorrect
+        percent = (correct / total * 100) if total > 0 else 0
+        await message.answer(
+            f"<b>📊 Ваша статистика:</b>\n"
+            f"✅ Правильных ответов: {correct}\n"
+            f"❌ Неправильных ответов: {incorrect}\n"
+            f"🎯 Точность: {percent:.2f}%"
+        )
+    else:
+        await message.answer("У вас пока нет статистики. Пройдите обучение, чтобы она появилась.")
