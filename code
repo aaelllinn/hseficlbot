@@ -279,3 +279,20 @@ async def show_statistics(message: Message):
         )
     else:
         await message.answer("У вас пока нет статистики. Пройдите обучение, чтобы она появилась.")
+
+# Включение напоминания
+@dp.message(F.text == "🔔 Напоминание")
+async def enable_reminder(message: Message):
+    user_id = message.from_user.id
+    logging.info(f"Кнопка 'Напоминание' нажата пользователем {user_id}")
+    try:
+        async with aiosqlite.connect("flashcards.db") as db:
+            await db.execute("""
+                INSERT INTO reminders (user_id, enabled) VALUES (?, 1)
+                ON CONFLICT(user_id) DO UPDATE SET enabled = 1
+            """, (user_id,))
+            await db.commit()
+        await message.answer("🔔 Напоминание включено! Вы будете получать его ежедневно в 18:00 по МСК.")
+    except aiosqlite.Error as e:
+        logging.error(f"Ошибка базы данных при включении напоминания для пользователя {user_id}: {e}")
+        await message.answer("❌ Ошибка при настройке напоминания. Попробуйте позже.")
