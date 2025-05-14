@@ -296,3 +296,20 @@ async def enable_reminder(message: Message):
     except aiosqlite.Error as e:
         logging.error(f"Ошибка базы данных при включении напоминания для пользователя {user_id}: {e}")
         await message.answer("❌ Ошибка при настройке напоминания. Попробуйте позже.")
+
+# Отключение напоминания
+@dp.message(F.text == "❌ Отключить напоминание")
+async def disable_reminder(message: Message):
+    user_id = message.from_user.id
+    logging.info(f"Кнопка 'Отключить напоминание' нажата пользователем {user_id}")
+    try:
+        async with aiosqlite.connect("flashcards.db") as db:
+            await db.execute("""
+                INSERT INTO reminders (user_id, enabled) VALUES (?, 0)
+                ON CONFLICT(user_id) DO UPDATE SET enabled = 0
+            """, (user_id,))
+            await db.commit()
+        await message.answer("❌ Напоминание отключено.")
+    except aiosqlite.Error as e:
+        logging.error(f"Ошибка базы данных при отключении напоминания для пользователя {user_id}: {e}")
+        await message.answer("❌ Ошибка при отключении напоминания. Попробуйте позже.")
