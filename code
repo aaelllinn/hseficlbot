@@ -332,6 +332,7 @@ async def send_reminders():
                     logging.error(f"Ошибка при отправке напоминания пользователю {user_id}: {e}")
     except aiosqlite.Error as e:
         logging.error(f"Ошибка базы данных при отправке напоминаний: {e}")
+
 # Обработка всех сообщений
 @dp.message()
 async def handle_message(message: Message):
@@ -347,3 +348,42 @@ async def handle_message(message: Message):
         dp.data[user_id] = {"state": "add_cards", "category": category}
         await message.answer(
             f"Тема: {category}\nВведите карточки в формате: Вопрос - Ответ\nМожно вводить несколько строк.\n\nПример:\nЧто такое Пи? - 3.14\n2+2? - 4")
+
+   elif state == "add_cards":
+        category = state_data["category"]
+        lines = message.text.strip().split("\n")
+        logging.info(f"User {user_id} input: {message.text}")
+        logging.info(f"Parsed lines: {lines}")
+        added = 0
+        try:
+            async with aiosqlite.connect("flashcards.db") as db:
+                for line in lines:
+                    line = line.strip()
+                    logging.info(f"Processing line: {line}")
+                    if not line:
+                        continue
+                    splitter = " - " if " - " in line else " | " if " | " in line else None
+                    if splitter:
+                        parts = line.split(splitter, 1)
+                        logging.info(f"Split parts: {parts}")
+                        if len(parts) == 2:
+                            question, answer = map(str.strip, parts)
+                            if question and answer:
+                                logging.info(f"Adding: {question} - {answer}")
+                                await db.execute(
+                                    "INSERT INTO flashcards (user_id, question, answer, category) VALUES (?, ?, ?, ?)",
+                                    (user_id, question, answer, category))
+                                added += 1
+                            else:
+                                logging.warning(f"Пустой вопрос или ответ: {question} - {answer}")
+                        else:
+                            logging.warning(f"Неверное количество частей: {parts}")
+                    else:
+                        logging.warning(f"Разделитель не найден в строке: {line}")
+                await db.commit()
+            logging.info(f"Added {added} cards")
+        except aiosqlite.Error as e:
+            logging.error(f"Ошибка базы данных: {e}")
+            await message.answer("❌ Ошибка при сохранении карточек. Попробуйте позже.")
+            dp.data[user_id] = {}
+            return
