@@ -313,3 +313,22 @@ async def disable_reminder(message: Message):
     except aiosqlite.Error as e:
         logging.error(f"Ошибка базы данных при отключении напоминания для пользователя {user_id}: {e}")
         await message.answer("❌ Ошибка при отключении напоминания. Попробуйте позже.")
+
+# Функция отправки напоминаний
+async def send_reminders():
+    logging.info("Запуск отправки напоминаний")
+    try:
+        async with aiosqlite.connect("flashcards.db") as db:
+            cursor = await db.execute("SELECT user_id FROM reminders WHERE enabled = 1")
+            user_ids = await cursor.fetchall()
+            for (user_id,) in user_ids:
+                try:
+                    await bot.send_message(
+                        user_id,
+                        "🔔 Напоминание: не забудьте повторить карточки!"
+                    )
+                    logging.info(f"Напоминание отправлено пользователю {user_id}")
+                except Exception as e:
+                    logging.error(f"Ошибка при отправке напоминания пользователю {user_id}: {e}")
+    except aiosqlite.Error as e:
+        logging.error(f"Ошибка базы данных при отправке напоминаний: {e}")
