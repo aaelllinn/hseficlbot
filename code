@@ -332,3 +332,18 @@ async def send_reminders():
                     logging.error(f"Ошибка при отправке напоминания пользователю {user_id}: {e}")
     except aiosqlite.Error as e:
         logging.error(f"Ошибка базы данных при отправке напоминаний: {e}")
+# Обработка всех сообщений
+@dp.message()
+async def handle_message(message: Message):
+    user_id = message.from_user.id
+    state_data = dp.data.get(user_id, {})
+    state = state_data.get("state")
+
+    if state == "add_category":
+        category = message.text.strip() or "Общее"
+        if len(category) > 50:
+            await message.answer("❕ Категория слишком длинная. Максимум 50 символов.")
+            return
+        dp.data[user_id] = {"state": "add_cards", "category": category}
+        await message.answer(
+            f"Тема: {category}\nВведите карточки в формате: Вопрос - Ответ\nМожно вводить несколько строк.\n\nПример:\nЧто такое Пи? - 3.14\n2+2? - 4")
