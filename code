@@ -387,3 +387,18 @@ async def handle_message(message: Message):
             await message.answer("❌ Ошибка при сохранении карточек. Попробуйте позже.")
             dp.data[user_id] = {}
             return
+
+        if added:
+            await message.answer(f"Добавлено карточек: {added} в тему '{category}' ✅")
+        else:
+            await message.answer(
+                "❕ Ошибка: Проверьте формат ввода (например, 'Вопрос - Ответ').\n"
+                "Убедитесь, что каждая строка содержит вопрос и ответ, разделённые ' - ' или ' | '.")
+        dp.data[user_id] = {}
+
+    elif state == "delete_card":
+        if not message.text.isdigit():
+            await message.answer("❕ Введите корректный номер.")
+            dp.data[user_id] = {}
+            return
+        number = int(message.text) - 1
