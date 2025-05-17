@@ -1,6 +1,2 @@
-aiosqlite
-pytz
-aiogram 
-apscheduler
-
+aiosqlite pytz aiogram apscheduler
 
