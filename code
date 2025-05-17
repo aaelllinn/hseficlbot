@@ -438,3 +438,29 @@ elif state == "view_card":
             logging.error(f"Ошибка базы данных: {e}")
             await message.answer("❌ Ошибка при просмотре карточки. Попробуйте позже.")
         dp.data[user_id] = {}
+  
+elif state == "edit_card":
+        parts = message.text.split(" - ")
+        if len(parts) != 3 or not parts[0].strip().isdigit():
+            await message.answer("❕ Формат: Номер - Вопрос - Ответ")
+            dp.data[user_id] = {}
+            return
+        number = int(parts[0].strip()) - 1
+        new_q = parts[1].strip()
+        new_a = parts[2].strip()
+        try:
+            async with aiosqlite.connect("flashcards.db") as db:
+                cursor = await db.execute("SELECT id FROM flashcards WHERE user_id = ? ORDER BY id", (user_id,))
+                user_cards = await cursor.fetchall()
+                if 0 <= number < len(user_cards):
+                    card_id = user_cards[number][0]
+                    await db.execute("UPDATE flashcards SET question = ?, answer = ? WHERE id = ?",
+                                     (new_q, new_a, card_id))
+                    await db.commit()
+                    await message.answer("👍🏻 Карточка обновлена! 👍🏻")
+                else:
+                    await message.answer("❕ Нет карточки с таким номером.")
+        except aiosqlite.Error as e:
+            logging.error(f"Ошибка базы данных: {e}")
+            await message.answer("❌ Ошибка при редактировании карточки. Попробуйте позже.")
+        dp.data[user_id] = {}
