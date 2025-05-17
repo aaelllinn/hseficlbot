@@ -402,3 +402,18 @@ async def handle_message(message: Message):
             dp.data[user_id] = {}
             return
         number = int(message.text) - 1
+ try:
+            async with aiosqlite.connect("flashcards.db") as db:
+                cursor = await db.execute("SELECT id FROM flashcards WHERE user_id = ? ORDER BY id", (user_id,))
+                user_cards = await cursor.fetchall()
+                if 0 <= number < len(user_cards):
+                    card_id = user_cards[number][0]
+                    await db.execute("DELETE FROM flashcards WHERE id = ?", (card_id,))
+                    await db.commit()
+                    await message.answer("Карточка удалена! ✅")
+                else:
+                    await message.answer("❕ Нет карточки с таким номером.")
+        except aiosqlite.Error as e:
+            logging.error(f"Ошибка базы данных: {e}")
+            await message.answer("❌ Ошибка при удалении карточки. Попробуйте позже.")
+        dp.data[user_id] = {}
