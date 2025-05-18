@@ -491,3 +491,64 @@ elif state == "learn_select_category":
             )
             dp.data[user_id] = {}
             return
+       
+dp.data[user_id] = {
+            "state": "learn_answer",
+            "category": category,
+            "cards": cards,
+            "current_index": 0,
+            "correct_answers": 0
+        }
+        await message.answer(
+            f"📚 Начнём изучение темы: {category}\n\nВопрос: {cards[0][0]}\nВведите ответ:",
+            reply_markup=keyboard
+        )
+
+    elif state == "learn_answer":
+        category = state_data["category"]
+        cards = state_data["cards"]
+        idx = state_data["current_index"]
+        correct = state_data["correct_answers"]
+
+        question, answer = cards[idx]
+        if message.text.strip().lower() == answer.strip().lower():
+            await message.answer("✅ Правильно! ✅")
+            correct += 1
+        else:
+            await message.answer(f"❌ Неправильно ❌ \n\nПравильный ответ: {answer}")
+
+        idx += 1
+        if idx < len(cards):
+            dp.data[user_id] = {
+                "state": "learn_answer",
+                "category": category,
+                "cards": cards,
+                "current_index": idx,
+                "correct_answers": correct
+            }
+            await message.answer(f"Вопрос: {cards[idx][0]}\nВведите ответ:", reply_markup=keyboard)
+        else:
+            incorrect = len(cards) - correct
+            try:
+                async with aiosqlite.connect("flashcards.db") as db:
+                    await db.execute("""
+                        INSERT INTO statistics (user_id, correct, incorrect)
+                        VALUES (?, ?, ?)
+                        ON CONFLICT(user_id) DO UPDATE SET
+                        correct = correct + ?, incorrect = incorrect + ?
+                    """, (user_id, correct, incorrect, correct, incorrect))
+                    await db.commit()
+            except aiosqlite.Error as e:
+                logging.error(f"Ошибка базы данных: {e}")
+                await message.answer("❌ Ошибка при сохранении статистики.")
+
+            await message.answer(
+                f"📚 Изучение темы '{category}' завершено!\n\n✅ Правильных ответов: {correct}/{len(cards)}"
+            )
+            await message.answer("Выберите действие:", reply_markup=keyboard)
+            dp.data[user_id] = {}
+
+    else:
+        logging.info(f"Неизвестное сообщение от пользователя {user_id}: '{message.text}'")
+        await message.answer("Пожалуйста ☝🏻, используйте кнопки для навигации.")
+
