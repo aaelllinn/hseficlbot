@@ -1,4 +1,4 @@
 aiosqlite==0.17.0
 pytz==2019.1
-aiogram==2.0
+aiogram==3.4.1
 apscheduler==3.10.4
