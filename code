@@ -552,3 +552,12 @@ dp.data[user_id] = {
         logging.info(f"Неизвестное сообщение от пользователя {user_id}: '{message.text}'")
         await message.answer("Пожалуйста ☝🏻, используйте кнопки для навигации.")
 
+# Основная функция запуска
+async def main():
+    await init_db()
+    scheduler.add_job(send_reminders, CronTrigger(hour=18, minute=00 , timezone=pytz.timezone("Europe/Moscow")))
+    scheduler.start()
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
