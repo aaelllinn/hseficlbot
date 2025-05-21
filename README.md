@@ -59,3 +59,5 @@ https://www.youtube.com/watch?v=773WsFJDaIo&pp=ygUPZGF0ZXRpbWUgcHl0aG9u
 https://www.youtube.com/watch?v=0-nJiNlhHUo&pp=ygUObG9nZ2luZyBweXRob24%3D
 https://www.youtube.com/watch?v=Lz2XAu9Q8jk&pp=ygULcHl0eiBweXRob24%3D
 @BotFather - Telegram, для создания токена и самого бота.
+https://www.youtube.com/watch?v=PJz_tMIo_nM - токен закрыть
+
